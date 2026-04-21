@@ -32,7 +32,13 @@ export async function GET(req: Request) {
         raw: data,
       };
     }
-    return NextResponse.json({ loggedIn: true, user });
+    // determine whether is him admin from env
+    const adminList = (process.env.ADMIN_SLACK_IDS || process.env.NEXT_PUBLIC_ADMIN_SLACK_IDS || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+    const isAdmin = !!(user && (user.slack_id && adminList.includes(user.slack_id)));
+    return NextResponse.json({ loggedIn: true, user: { ...user, isAdmin }, adminList });
   } catch (e) {
     return NextResponse.json({ loggedIn: false });
   }

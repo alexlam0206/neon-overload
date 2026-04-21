@@ -57,6 +57,11 @@ export default function Home() {
           {!loading && user ? (
             <>
               <div style={{ marginBottom: 12 }}>Signed in as {user.email ?? user.name ?? user.id}</div>
+              {user.isAdmin ? (
+                <div style={{ marginBottom: 12 }}>
+                  <a href="/admin/users" style={{ marginRight: 12, textDecoration: 'none', padding: '8px 12px', background: '#0b74de', color: '#fff', borderRadius: 6 }}>Admin Panel</a>
+                </div>
+              ) : null}
               <button onClick={handleLogout} style={{ padding: '10px 16px', borderRadius: 6, background: '#c33', color: '#fff', border: 'none' }}>
                 Sign out
               </button>

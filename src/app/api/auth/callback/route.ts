@@ -5,8 +5,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
   if (!code) return new Response('Missing code', { status: 400 });
-
-  const base = process.env.NEXT_PUBLIC_BASE_URL || '';
+  const base = process.env.NEXT_PUBLIC_BASE_URL || url.origin;
   const tokenRes = await fetch('https://auth.hackclub.com/oauth/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -15,7 +14,7 @@ export async function GET(req: Request) {
       client_secret: process.env.HACKCLUB_CLIENT_SECRET || '',
       grant_type: 'authorization_code',
       code,
-      redirect_uri: `${base}/api/auth/callback`,
+      redirect_uri: `${base.replace(/\/$/, '')}/api/auth/callback`,
     }),
   });
 
