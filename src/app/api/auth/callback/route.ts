@@ -45,32 +45,45 @@ export async function GET(req: Request) {
   }
   const user = await meRes.json();
 
-  try {
-    await prisma.user.upsert({
-      where: { id: user.id },
-      update: {
-        email: user.email ?? undefined,
-        name: user.name ?? undefined,
-        given_name: user.given_name ?? undefined,
-        family_name: user.family_name ?? undefined,
-        slack_id: user.slack_id ?? undefined,
-        verification_status: user.verification_status ?? undefined,
-        raw: { ...user, tokenData },
-        oauth_token: accessToken,
-      },
-      create: {
-        id: user.id,
-        email: user.email ?? undefined,
-        name: user.name ?? undefined,
-        given_name: user.given_name ?? undefined,
-        family_name: user.family_name ?? undefined,
-        slack_id: user.slack_id ?? undefined,
-        verification_status: user.verification_status ?? undefined,
-        raw: { ...user, tokenData },
-        oauth_token: accessToken,
-      },
-    });
-  } catch (e) {
+  const uid = user.id ?? user.identity?.id;
+  const email = user.email ?? user.primary_email ?? user.identity?.primary_email ?? null;
+  const name = user.name ?? user.identity?.name ?? [user.identity?.first_name, user.identity?.last_name].filter(Boolean).join(' ') ?? null;
+  const given_name = user.given_name ?? user.identity?.first_name ?? null;
+  const family_name = user.family_name ?? user.identity?.last_name ?? null;
+  const slack_id = user.slack_id ?? user.identity?.slack_id ?? null;
+  const verification_status = user.verification_status ?? user.identity?.verification_status ?? null;
+
+  if (!uid) {
+    try { console.error('Missing user id from /api/v1/me response', user); } catch (e) {}
+  } else {
+    try {
+      await prisma.user.upsert({
+        where: { id: uid },
+        update: {
+          email: email ?? undefined,
+          name: name ?? undefined,
+          given_name: given_name ?? undefined,
+          family_name: family_name ?? undefined,
+          slack_id: slack_id ?? undefined,
+          verification_status: verification_status ?? undefined,
+          raw: JSON.stringify({ ...user, tokenData }),
+          oauth_token: accessToken,
+        },
+        create: {
+          id: uid,
+          email: email ?? undefined,
+          name: name ?? undefined,
+          given_name: given_name ?? undefined,
+          family_name: family_name ?? undefined,
+          slack_id: slack_id ?? undefined,
+          verification_status: verification_status ?? undefined,
+          raw: JSON.stringify({ ...user, tokenData }),
+          oauth_token: accessToken,
+        },
+      });
+    } catch (e) {
+      try { console.error('Prisma upsert error:', e); } catch (err) {}
+    }
   }
 
   const res = NextResponse.redirect(`${base}/`);

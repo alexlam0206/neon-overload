@@ -3,9 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "predev": "prisma generate && prisma db push",
+    "dev": "NODE_ENV=development next dev",
     "build": "next build",
-    "start": "next start",
+    "prestart": "prisma generate && prisma db push",
+    "start": "NODE_ENV=production next start",
+    "predeploy": "prisma generate && prisma db push",
+    "deploy": "NODE_ENV=production next build && NODE_ENV=production next start",
     "lint": "eslint"
   },
   "dependencies": {
